@@ -1,3 +1,7 @@
+#ide
+.vscode
+*.json
+
 # Prerequisites
 *.d
 
