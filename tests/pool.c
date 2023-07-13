@@ -17,6 +17,15 @@ static sPool *poolAddr = &__pool;
  */
 bool __init(sPool *const pool)
 {
+    static bool init_fl = false;
+
+    if (init_fl)
+    {
+#ifdef DEBUG
+        printf("Init uzhe proizveden\r\n");
+        return false;
+#endif
+    }
 
     if (poolAddr != pool)
     {
@@ -52,7 +61,7 @@ bool __init(sPool *const pool)
     /* ukazateli na nachalo i konec nuzhni dlya proverki pri free. t.k. adres mozhno peredat' lyboi */
     pool->pStart = &pool->buff[0];
     pool->pEnd = &pool->buff[POOL_SIZE];
-
+    init_fl = true;
     pthread_mutex_unlock(&pool_mutex);
 
     return true;

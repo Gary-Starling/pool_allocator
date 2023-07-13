@@ -46,7 +46,7 @@ bool __init(sPool * const pool);
 void *__alloc(sPool * const pool);
 
 /* Освобождение сегмента в пуле */
-void * __free(sPool * const pool, sPoolSeg *fptr);
+void * __free(sPool * const poolNULL, sPoolSeg *fptr);
 
 /* Интерфейс работы с pool аллокатором */
 static struct pool_interface
