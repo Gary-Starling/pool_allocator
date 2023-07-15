@@ -23,21 +23,23 @@ bool __init(sPool *const pool)
     {
 #ifdef DEBUG
         printf("Init uzhe proizveden\r\n");
-        return false;
 #endif
+        return false;
     }
 
     if (poolAddr != pool)
     {
 #ifdef DEBUG
         printf("Neverniy adres pula\r\n");
-        return false;
 #endif
+        return false;
     }
 
     if (!pool)
     {
+#ifdef DEBUG
         printf("&pool = NULL\r\n");
+#endif
         return false;
     }
 
@@ -45,8 +47,8 @@ bool __init(sPool *const pool)
     {
 #ifdef DEBUG
         printf("Razmer ukazatelya dolzhen bit' ne menshe razmera segmenta\r\n");
-        return false;
 #endif
+        return false;
     }
 
     pthread_mutex_lock(&pool_mutex);
@@ -125,16 +127,16 @@ static bool __valid_addr(const sPool *const pool, const sPoolSeg *const fptr)
     {
 #ifdef DEBUG
         printf("pool or fptr == NULL\r\n");
-        return false;
 #endif
+        return false;
     }
 
     if (fptr < pool->pStart || fptr > pool->pEnd)
     {
 #ifdef DEBUG
         printf("vne diapozonov adresov\r\n");
-        return false;
 #endif
+        return false;
     }
 
     /* pust addr ptr0 = 0x10; ptr1 = 0x20 ...
@@ -144,8 +146,9 @@ static bool __valid_addr(const sPool *const pool, const sPoolSeg *const fptr)
     {
 #ifdef DEBUG
         printf("ne validniy ukazatel' na segmen\n");
-        return false;
+
 #endif
+        return false;
     }
 
     return true;

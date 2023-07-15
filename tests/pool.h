@@ -6,7 +6,7 @@
 #ifndef _POOL_H_
 #define _POOL_H_
 
-#define DEBUG
+//#define DEBUG
 
 /* Segmen pula */
 typedef struct
@@ -17,7 +17,7 @@ typedef struct
 } sPoolSeg;
 
 //TODO: sdelat' pool_config.h
-#define POOL_SIZE (6U)
+#define POOL_SIZE (10U)
 #define SEG_BYTE_SIZE (sizeof(sPoolSeg))
 
 /* Нам нужен размер указателя */
