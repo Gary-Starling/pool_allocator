@@ -6,7 +6,9 @@
 #ifndef _POOL_H_
 #define _POOL_H_
 
-#define DEBUG
+//#define DEBUG
+
+/* Config */
 
 /* Segmen pula */
 typedef struct
@@ -16,9 +18,11 @@ typedef struct
     uint8_t data[20];
 } sPoolSeg;
 
-//TODO: sdelat' pool_config.h
-#define POOL_SIZE (6U)
+
+#define POOL_SIZE (10U)
 #define SEG_BYTE_SIZE (sizeof(sPoolSeg))
+
+/* Config end */
 
 /* Нам нужен размер указателя */
 #if INTPTR_MAX == INT64_MAX
@@ -39,16 +43,16 @@ typedef struct
     sPoolSeg buff[POOL_SIZE];       // bufer pula
 } sPool;
 
-/* Инит буфера, обязателен перед работой с пулом */
+/* Init, nuzhen pered nachalom raboti  */
 bool __init(sPool * const pool);
 
-/* Аллокция сегмента */
+/* Segment allocation  */
 void *__alloc(sPool * const pool);
 
-/* Освобождение сегмента в пуле */
-void * __free(sPool * const pool, sPoolSeg *fptr);
+/* Segment free */
+void * __free(sPool * const poolNULL, sPoolSeg *fptr);
 
-/* Интерфейс работы с pool аллокатором */
+/* Interface */
 static struct pool_interface
 {
     bool (*init)(sPool * const pool);

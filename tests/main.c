@@ -1,8 +1,8 @@
-// #include <stdio.h>
 #include <gtest/gtest.h>
-#include "pool.h"
+#include "../pool.h"
 
 extern sPool __pool;
+sPoolSeg *ptrPool[POOL_SIZE] = {NULL};
 
 TEST(init_null_ptr, return_false)
 {
@@ -35,14 +35,12 @@ TEST(free_random_ptr, return_null)
 
 TEST(alloc_all_pool, size_pool)
 {
-
-    sPoolSeg *ptrPool1[POOL_SIZE] = {NULL};
     size_t alloc_cnt = 0;
 
     for (size_t i = 0; i < POOL_SIZE; i++)
     {
-        ptrPool1[i] = (sPoolSeg *)pool.alloc(&__pool);
-        if (ptrPool1[i] != NULL)
+        ptrPool[i] = (sPoolSeg *)pool.alloc(&__pool);
+        if (ptrPool[i] != NULL)
             alloc_cnt++;
     }
 
@@ -52,13 +50,13 @@ TEST(alloc_all_pool, size_pool)
 TEST(try_alloc_from_empty_pool, zero_elements)
 {
 
-    sPoolSeg *ptrPool[POOL_SIZE] = {NULL};
+    sPoolSeg *ptrPool_empty[POOL_SIZE];
     size_t alloc_cnt = 0, iter_cnt = 0;
 
     for (size_t i = 0; i < POOL_SIZE; i++)
     {
-        ptrPool[i] = (sPoolSeg *)pool.alloc(&__pool);
-        if (ptrPool[i] != NULL)
+        ptrPool_empty[i] = (sPoolSeg *)pool.alloc(&__pool);
+        if (ptrPool_empty[i] != NULL)
             alloc_cnt++;
         iter_cnt++;
     }
@@ -67,7 +65,7 @@ TEST(try_alloc_from_empty_pool, zero_elements)
     ASSERT_EQ(iter_cnt, POOL_SIZE);
 }
 
-TEST(free_all_pull, pool_size_elements)
+TEST(free_all_pull, free_pool_size_elements)
 {
 
     size_t free_cnt = 0;
@@ -81,6 +79,69 @@ TEST(free_all_pull, pool_size_elements)
     ASSERT_EQ(free_cnt, POOL_SIZE);
 }
 
+#define ITER 10000U
+TEST(random_alloc, cnt_alloc_or_free)
+{
+
+    size_t op, ii, free_cnt = 0, alloc_cnt = 0;
+    srand(time(NULL));
+
+    for (size_t i = 0; i < ITER; i++)
+    {
+        ii = rand() % POOL_SIZE;
+        op = rand() % 2;
+
+        if (op)
+        {
+            if (ptrPool[ii] == NULL)
+            {
+                ptrPool[ii] = (sPoolSeg *)pool.alloc(&__pool);
+                ptrPool[ii]->cnt = 0xFF; // some data
+                alloc_cnt++;
+            }
+        }
+        else
+        {
+
+            if (ptrPool[ii] != NULL)
+            {
+                ptrPool[ii] = (sPoolSeg *)pool.free(&__pool, ptrPool[ii]);
+                free_cnt++;
+            }
+        }
+    }
+
+    op = 0;
+    if (alloc_cnt > free_cnt)
+    {
+        for (size_t i = 0; i < POOL_SIZE; i++)
+            if (ptrPool[i] != NULL)
+                op++;
+        ASSERT_EQ(op, alloc_cnt - free_cnt);
+        printf("alloc_cnt - free_cnt = %lu\r\n", alloc_cnt - free_cnt);
+    }
+    else if (alloc_cnt < free_cnt)
+    {
+        for (size_t i = 0; i < POOL_SIZE; i++)
+            if (ptrPool[i] == NULL)
+                op++;
+        ASSERT_EQ(op, free_cnt - alloc_cnt);
+        printf("free_cnt - free_cnt = %lu\r\n", free_cnt - alloc_cnt);
+    }
+    else
+    {
+        for (size_t i = 0; i < POOL_SIZE; i++)
+            if (ptrPool[i] == NULL)
+                op++;
+        ASSERT_EQ(op, POOL_SIZE);
+        printf("alloc_cnt = %lu\r\n", alloc_cnt);
+        printf("free_cnt = %lu\r\n", free_cnt);
+    }
+
+    printf("op = %lu\r\n",op);
+}
+
+/* bez gtest (moi testi) */
 // int main(int argc, char const *argv[])
 //{
 //     /* */

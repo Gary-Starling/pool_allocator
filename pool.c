@@ -7,7 +7,7 @@
 static bool __valid_addr(const sPool *const pool, const sPoolSeg *const fptr);
 static pthread_mutex_t pool_mutex = PTHREAD_MUTEX_INITIALIZER;
 sPool __pool;
-static sPool *poolAddr = &__pool;
+const static sPool *poolAddr = &__pool;
 
 /**
  * Inicializaciya segmentov pula
@@ -17,18 +17,29 @@ static sPool *poolAddr = &__pool;
  */
 bool __init(sPool *const pool)
 {
+    static bool init_fl = false;
+
+    if (init_fl)
+    {
+#ifdef DEBUG
+        printf("Init uzhe proizveden\r\n");
+#endif
+        return false;
+    }
 
     if (poolAddr != pool)
     {
 #ifdef DEBUG
         printf("Neverniy adres pula\r\n");
-        return false;
 #endif
+        return false;
     }
 
     if (!pool)
     {
+#ifdef DEBUG
         printf("&pool = NULL\r\n");
+#endif
         return false;
     }
 
@@ -36,47 +47,49 @@ bool __init(sPool *const pool)
     {
 #ifdef DEBUG
         printf("Razmer ukazatelya dolzhen bit' ne menshe razmera segmenta\r\n");
-        return false;
 #endif
+        return false;
     }
 
     pthread_mutex_lock(&pool_mutex);
 
-    /* Связвывем элементы. Сделаем каст до указателя платформы и запишем туда адрес следующего сегмента */
+    /* svyazivaem el-ti, delaem cast el-ta do ukazatelya platformi i pishem tuda adr */
     for (size_t i = 0; i < POOL_SIZE - 1; i++)
         *(PTR_SIZE *)(&pool->buff[i]) = (PTR_SIZE)(&(pool->buff[i + 1]));
 
-    *((PTR_SIZE *)(&pool->buff[POOL_SIZE - 1])) = (PTR_SIZE)(NULL); // конец списка
-    pool->freeSeg = pool->buff;                                     // указатель на свободный элемент
+    *((PTR_SIZE *)(&pool->buff[POOL_SIZE - 1])) = (PTR_SIZE)(NULL); // konec spiska
+    pool->freeSeg = pool->buff;                                     // ptr na svobomiy el-t
 
     /* ukazateli na nachalo i konec nuzhni dlya proverki pri free. t.k. adres mozhno peredat' lyboi */
     pool->pStart = &pool->buff[0];
     pool->pEnd = &pool->buff[POOL_SIZE];
-
+    init_fl = true;
     pthread_mutex_unlock(&pool_mutex);
 
     return true;
 }
 
 /**
- * @brief
- *
+ * sPool *const pool - ptr na pul 
+ * return - NULL esli oshibka
+ * adr - v sluchae svobodnih segmentov
  */
 void *__alloc(sPool *const pool)
 {
-    sPoolSeg *ptrAlloc; // Возращаемый адрес сегмента
+    sPoolSeg *ptrAlloc; // adr return 
 
     if (!pool)
-        return NULL; // Неверная передача параметров
+        return NULL;    // peredali ne tot adr
+
     if (!pool->freeSeg)
-        return NULL; // Конец пула
+        return NULL;    // Konec pula
 
-    pthread_mutex_lock(&pool_mutex);
+    pthread_mutex_lock(&pool_mutex);                 // dlya neskolkih potokov(lock)
 
-    ptrAlloc = pool->freeSeg;                        // Свободный сегмент
-    pool->freeSeg = *((sPoolSeg **)(pool->freeSeg)); // Передвинем указатель на следующий своюодный сегмент
+    ptrAlloc = pool->freeSeg;                        // free seg
+    pool->freeSeg = *((sPoolSeg **)(pool->freeSeg)); // peredvinem ukazatel' na svobodniy element
 
-    pthread_mutex_unlock(&pool_mutex);
+    pthread_mutex_unlock(&pool_mutex);               //unlock
 
     return ptrAlloc;
 }
@@ -107,8 +120,11 @@ void *__free(sPool *const pool, sPoolSeg *fptr)
 }
 
 /**
- *
- *
+ * staticheskaya f-ya, proverki validnosti adresa
+ *  const sPool *const pool - ptr na pul
+ *  const sPoolSeg *const fptr - ptr na segment
+ *  return true elsi v diapazone adresov i verniy adres pule
+ *  false - vo vseh ostal'nih sluchayah
  */
 static bool __valid_addr(const sPool *const pool, const sPoolSeg *const fptr)
 {
@@ -116,16 +132,16 @@ static bool __valid_addr(const sPool *const pool, const sPoolSeg *const fptr)
     {
 #ifdef DEBUG
         printf("pool or fptr == NULL\r\n");
-        return false;
 #endif
+        return false;
     }
 
     if (fptr < pool->pStart || fptr > pool->pEnd)
     {
 #ifdef DEBUG
         printf("vne diapozonov adresov\r\n");
-        return false;
 #endif
+        return false;
     }
 
     /* pust addr ptr0 = 0x10; ptr1 = 0x20 ...
@@ -135,8 +151,9 @@ static bool __valid_addr(const sPool *const pool, const sPoolSeg *const fptr)
     {
 #ifdef DEBUG
         printf("ne validniy ukazatel' na segmen\n");
-        return false;
+
 #endif
+        return false;
     }
 
     return true;
